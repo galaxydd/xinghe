@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘礼物</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffcce6, #e6f2ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gift-popup {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            padding: 40px 30px;
+            z-index: 100;
+            position: relative;
+            transform: scale(0.9);
+            animation: popIn 0.8s ease-out forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .gift-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: #ff6b9c;
+            display: block;
+        }
+
+        h1 {
+            color: #ff6b9c;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .confirm-btn {
+            background: #ff6b9c;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 156, 0.4);
+        }
+
+        .confirm-btn:hover {
+            background: #ff4d8a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 156, 0.5);
+        }
+
+        .confirm-btn:active {
+            transform: translateY(1px);
+        }
+
+        .tip-window {
+            position: absolute;
+            width: 250px;
+            height: 60px;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            font-weight: bold;
+            animation: float 5s ease-in-out infinite;
+            text-align: center;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .tip-window:hover {
+            transform: scale(1.1) !important;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 24px;
+            color: #ff6b9c;
+            z-index: 1;
+            animation: floatHeart 8s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 礼物弹窗 -->
+    <div class="gift-popup">
+        <i class="fas fa-gift gift-icon"></i>
+        <h1>主播天天开心</h1>
+        <p>您有一份神秘礼物，确定要打开吗？</p>
+        <button class="confirm-btn" id="confirm-btn">确定</button>
+    </div>
+
+    <!-- 背景音乐 -->
+    <audio id="bg-music" loop>
+        <!-- 使用一个免费的背景音乐链接 -->
+        <source src="./1.mp3" type="audio/mpeg">
+        您的浏览器不支持 audio 标签。
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirm-btn');
+            const bgMusic = document.getElementById('bg-music');
+
+            const MAX_WINDOWS = 100;
+            let windowCount = 0;
+            let popInterval;
+            let isPlaying = false;
+
+            // 扩展弹窗文案
+            const tips = [
+                '多喝水哦~', '保持微笑呀', '每天都要元气满满',
+                '记得吃水果', '保持好心情', '好好爱自己',
+                '今天也要加油', '休息一下再继续', '你是最棒的',
+                '记得按时吃饭', '眼睛也需要休息', '给自己一个拥抱',
+                '今天天气真好', '记得给家人打电话', '一切都会好的',
+                '坚持就是胜利', '做自己喜欢的事', '享受当下时刻',
+                '你是独一无二的', '今天也要开心哦', '给自己点个赞',
+                '小小的进步也是进步', '感谢努力的自己', '放轻松一点',
+                '明天会更好', '相信自己的能力', '微笑是最好的礼物',
+                '每一天都是新的开始', '困难都是暂时的', '你是生活的勇士',
+                '不要忘记微笑', '阳光总在风雨后', '善待自己和他人',
+                '生活因你而精彩', '小小的幸福也很珍贵', '向前看，别回头',
+                '你是自己的太阳', '每天都是特别的日子', '记得对自己好一点',
+                '世界因你而美丽', '保持好奇心', '感恩拥有的一切',
+                '勇敢追求梦想', '你是最特别的', '快乐其实很简单',
+                '让心灵去旅行', '用心感受生活', '爱是最美的语言'
+            ];
+
+            const bgColors = [
+                'rgba(255, 182, 193, 0.9)', 'rgba(135, 206, 235, 0.9)',
+                'rgba(144, 238, 144, 0.9)', 'rgba(221, 160, 221, 0.9)',
+                'rgba(255, 255, 153, 0.9)', 'rgba(255, 160, 122, 0.9)',
+                'rgba(173, 216, 230, 0.9)', 'rgba(240, 128, 128, 0.9)'
+            ];
+
+            // 创建温馨弹窗
+            function createWarmTip() {
+                if (windowCount >= MAX_WINDOWS) {
+                    console.log(`已达到最大弹窗数量（${MAX_WINDOWS}个），自动暂停`);
+                    clearInterval(popInterval);
+                    return;
+                }
+
+                const tipWindow = document.createElement('div');
+                tipWindow.className = 'tip-window';
+                tipWindow.textContent = tips[Math.floor(Math.random() * tips.length)];
+                tipWindow.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+
+                // 随机位置
+                const x = Math.random() * (window.innerWidth - 270);
+                const y = Math.random() * (window.innerHeight - 80);
+                tipWindow.style.left = `${x}px`;
+                tipWindow.style.top = `${y}px`;
+
+                // 随机动画延迟
+                tipWindow.style.animationDelay = `${Math.random() * 5}s`;
+
+                // 添加点击移除效果
+                tipWindow.onclick = () => {
+                    document.body.removeChild(tipWindow);
+                    windowCount--;
+                };
+
+                document.body.appendChild(tipWindow);
+                windowCount++;
+
+                // 创建漂浮爱心
+                createFloatingHeart();
+            }
+
+            // 创建漂浮爱心
+            function createFloatingHeart() {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerHTML = '❤';
+
+                // 随机位置
+                const x = Math.random() * window.innerWidth;
+                heart.style.left = `${x}px`;
+
+                // 随机动画延迟和持续时间
+                heart.style.animationDelay = `${Math.random() * 5}s`;
+                heart.style.animationDuration = `${5 + Math.random() * 10}s`;
+
+                document.body.appendChild(heart);
+
+                // 动画结束后移除爱心
+                setTimeout(() => {
+                    if (heart.parentNode) {
+                        document.body.removeChild(heart);
+                    }
+                }, 15000);
+            }
+
+            // 点击确定按钮
+            confirmBtn.addEventListener('click', function() {
+                // 移除礼物弹窗
+                document.querySelector('.gift-popup').style.display = 'none';
+
+                // 播放音乐
+                playBackgroundMusic();
+
+                // 开始弹窗
+                popInterval = setInterval(createWarmTip, 500);
+                isPlaying = true;
+            });
+
+            // 播放背景音乐
+            function playBackgroundMusic() {
+                // 设置音量
+                bgMusic.volume = 0.5;
+
+                // 播放音乐
+                bgMusic.play().then(() => {
+                    console.log('音乐开始播放');
+                }).catch(err => {
+                    console.warn('音乐播放失败:', err);
+
+                    // 尝试用户交互后再次播放
+                    document.body.addEventListener('click', function retryPlay() {
+                        bgMusic.play().then(() => {
+                            console.log('音乐开始播放');
+                            document.body.removeEventListener('click', retryPlay);
+                        });
+                    }, { once: true });
+                });
+            }
+
+            // 预创建一些漂浮爱心
+            for (let i = 0; i < 10; i++) {
+                setTimeout(createFloatingHeart, i * 500);
+            }
+        });
+    </script>
+</body>
+</html>
